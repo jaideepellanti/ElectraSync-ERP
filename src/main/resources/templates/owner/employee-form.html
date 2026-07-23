@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Employee Form — ElectraSync ERP</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{partials/sidebar :: sidebar}"></div>
+    <div class="main-content">
+
+        <div class="page-header">
+            <div>
+                <h1 th:text="${employee.id == null} ? 'Add New Employee' : 'Edit Employee'"></h1>
+            </div>
+            <a th:href="@{/owner/employees}" class="btn btn-outline">← Back to Employees</a>
+        </div>
+
+        <div th:replace="~{partials/flash-messages :: flashMessages}"></div>
+
+        <div class="card" style="max-width:720px;">
+            <form th:action="@{/owner/employees/save}" method="post" th:object="${employee}">
+                <input type="hidden" th:field="*{id}">
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Full Name *</label>
+                        <input type="text" class="form-control" th:field="*{fullName}"
+                               required placeholder="e.g. Arun Kumar" maxlength="100">
+                    </div>
+                    <div class="form-group">
+                        <label>Designation *</label>
+                        <input type="text" class="form-control" th:field="*{designation}"
+                               required placeholder="e.g. Sales Executive, Cashier" maxlength="50">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Phone Number *</label>
+                        <input type="tel" class="form-control" th:field="*{phone}"
+                               required placeholder="e.g. 9876543210" maxlength="15">
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" class="form-control" th:field="*{email}"
+                               placeholder="e.g. arun@email.com" maxlength="100">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Monthly Salary (₹) *</label>
+                        <input type="number" class="form-control" th:field="*{monthlySalary}"
+                               step="0.01" min="1" required placeholder="e.g. 25000.00">
+                    </div>
+                    <div class="form-group" th:if="${employee.id == null}">
+                        <label>Date of Joining *</label>
+                        <input type="date" class="form-control" th:field="*{joiningDate}" required>
+                    </div>
+                    <div class="form-group" th:if="${employee.id != null}">
+                        <label>Date of Joining</label>
+                        <input type="text" class="form-control"
+                               th:value="${#temporals.format(employee.joiningDate, 'dd MMM yyyy')}" disabled>
+                        <div class="field-hint">Joining date cannot be changed once set.</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Address</label>
+                    <input type="text" class="form-control" th:field="*{address}"
+                           placeholder="Residential address" maxlength="255">
+                </div>
+
+                <div class="form-group">
+                    <label>Employment Status *</label>
+                    <select class="form-control" th:field="*{status}">
+                        <option value="ACTIVE">Active</option>
+                        <option value="INACTIVE">Inactive</option>
+                        <option value="ON_LEAVE">On Leave</option>
+                    </select>
+                </div>
+
+                <div style="display:flex; gap:10px; margin-top:8px;">
+                    <button type="submit" class="btn btn-primary">
+                        <span th:text="${employee.id == null} ? 'Add Employee' : 'Save Changes'"></span>
+                    </button>
+                    <a th:href="@{/owner/employees}" class="btn btn-outline">Cancel</a>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

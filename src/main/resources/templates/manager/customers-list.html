@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Customers — ElectraSync ERP</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{partials/sidebar :: sidebar}"></div>
+    <div class="main-content">
+
+        <div class="page-header">
+            <div>
+                <h1>👤 Customers</h1>
+                <div class="subtitle">Registered customers — link them to sales for purchase history</div>
+            </div>
+            <a th:href="@{/manager/customers/new}" class="btn btn-primary">+ Add Customer</a>
+        </div>
+
+        <div th:replace="~{partials/flash-messages :: flashMessages}"></div>
+
+        <div class="card">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Full Name</th>
+                        <th>Phone</th>
+                        <th>Email</th>
+                        <th>Address</th>
+                        <th>Registered On</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="c, stat : ${customers}">
+                        <td th:text="${stat.count}"></td>
+                        <td><strong th:text="${c.fullName}"></strong></td>
+                        <td th:text="${c.phone}"></td>
+                        <td th:text="${c.email != null} ? ${c.email} : '—'"></td>
+                        <td th:text="${c.address != null} ? ${c.address} : '—'"></td>
+                        <td th:text="${#temporals.format(c.registeredAt, 'dd MMM yyyy')}"></td>
+                        <td>
+                            <div class="action-btns">
+                                <a th:href="@{/manager/customers/edit/{id}(id=${c.id})}" class="btn btn-outline btn-sm">Edit</a>
+                                <form th:action="@{/manager/customers/delete/{id}(id=${c.id})}" method="post" style="display:inline;">
+                                    <button type="submit" class="btn btn-danger btn-sm"
+                                            onclick="return confirm('Delete this customer? This cannot be undone.')">
+                                        Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(customers)}">
+                        <td colspan="7">
+                            <div class="empty-state">
+                                <span class="empty-icon">👤</span>
+                                No customers registered yet. <a th:href="@{/manager/customers/new}">Add your first customer</a>.
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

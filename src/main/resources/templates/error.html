@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Error — ElectraSync ERP</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="login-page">
+    <div class="login-card" style="width:460px; text-align:center;">
+        <div style="font-size:48px; margin-bottom:12px;">⚠️</div>
+        <h2 style="margin-bottom:8px;">Something went wrong</h2>
+        <p class="text-muted" th:text="${status != null} ? 'Error ' + ${status} : 'An unexpected error occurred.'"></p>
+        <p class="text-muted" style="font-size:13px;" th:text="${message}"></p>
+        <div style="margin-top:24px; display:flex; gap:10px; justify-content:center;">
+            <a th:href="@{/dashboard}" class="btn btn-primary">Go to Dashboard</a>
+            <a href="javascript:history.back()" class="btn btn-outline">Go Back</a>
+        </div>
+    </div>
+</body>
+</html>

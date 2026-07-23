@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Vendors — ElectraSync ERP</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{partials/sidebar :: sidebar}"></div>
+    <div class="main-content">
+
+        <div class="page-header">
+            <div>
+                <h1>🚚 Vendors</h1>
+                <div class="subtitle">Companies that supply products to your store</div>
+            </div>
+            <a th:href="@{/manager/vendors/new}" class="btn btn-primary">+ Add Vendor</a>
+        </div>
+
+        <div th:replace="~{partials/flash-messages :: flashMessages}"></div>
+
+        <div class="card">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Company</th>
+                        <th>Contact Person</th>
+                        <th>Phone</th>
+                        <th>City</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="v : ${vendors}">
+                        <td><strong th:text="${v.companyName}"></strong></td>
+                        <td th:text="${v.contactPerson}"></td>
+                        <td th:text="${v.phone}"></td>
+                        <td th:text="${v.city != null} ? ${v.city} : '—'"></td>
+                        <td>
+                            <span th:class="${v.active} ? 'badge badge-success' : 'badge badge-neutral'"
+                                  th:text="${v.active} ? 'Active' : 'Inactive'"></span>
+                        </td>
+                        <td>
+                            <div class="action-btns">
+                                <a th:href="@{/manager/vendors/edit/{id}(id=${v.id})}" class="btn btn-outline btn-sm">Edit</a>
+                                <form th:if="${v.active}" th:action="@{/manager/vendors/deactivate/{id}(id=${v.id})}" method="post" style="display:inline;">
+                                    <button type="submit" class="btn btn-danger btn-sm"
+                                            onclick="return confirm('Deactivate this vendor?')">
+                                        Deactivate
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(vendors)}">
+                        <td colspan="6">
+                            <div class="empty-state">
+                                <span class="empty-icon">🚚</span>
+                                No vendors added yet. <a th:href="@{/manager/vendors/new}">Add your first vendor</a>.
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

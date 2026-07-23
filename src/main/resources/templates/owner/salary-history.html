@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Salary — ElectraSync ERP</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{partials/sidebar :: sidebar}"></div>
+    <div class="main-content">
+
+        <div class="page-header">
+            <div>
+                <h1>💰 Salary — <span th:text="${employee.fullName}"></span></h1>
+                <div class="subtitle"
+                     th:text="${employee.designation} + ' · Standard Monthly Salary: ₹' + ${#numbers.formatDecimal(employee.monthlySalary, 0, 'COMMA', 2, 'POINT')}">
+                </div>
+            </div>
+            <a th:href="@{/owner/employees}" class="btn btn-outline">← Back to Employees</a>
+        </div>
+
+        <div th:replace="~{partials/flash-messages :: flashMessages}"></div>
+
+        <div style="display:grid; grid-template-columns:360px 1fr; gap:20px;">
+
+            <!-- Pay Salary Form -->
+            <div class="card">
+                <h3 style="margin-top:0;">Pay Salary</h3>
+                <form th:action="@{/owner/employees/salary/pay}" method="post" th:object="${newPayment}">
+                    <input type="hidden" name="employee.id" th:value="${employee.id}">
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Month *</label>
+                            <select class="form-control" th:field="*{payMonth}" required>
+                                <option value="1">January</option>
+                                <option value="2">February</option>
+                                <option value="3">March</option>
+                                <option value="4">April</option>
+                                <option value="5">May</option>
+                                <option value="6">June</option>
+                                <option value="7">July</option>
+                                <option value="8">August</option>
+                                <option value="9">September</option>
+                                <option value="10">October</option>
+                                <option value="11">November</option>
+                                <option value="12">December</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Year *</label>
+                            <input type="number" class="form-control" th:field="*{payYear}" min="2020" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Basic Salary (₹) *</label>
+                        <input type="number" class="form-control" th:field="*{basicSalary}" step="0.01" min="1" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Bonus (₹)</label>
+                        <input type="number" class="form-control" th:field="*{bonus}" step="0.01" min="0" value="0">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Deductions (₹)</label>
+                        <input type="number" class="form-control" th:field="*{deductions}" step="0.01" min="0" value="0">
+                        <div class="field-hint">e.g. advances, penalties</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Payment Date *</label>
+                        <input type="date" class="form-control" th:field="*{paymentDate}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Payment Mode *</label>
+                        <select class="form-control" id="payment-mode" th:field="*{paymentMode}" required onchange="toggleSalaryReference()">
+                            <option value="CASH">Cash</option>
+                            <option value="UPI">UPI</option>
+                            <option value="BANK_TRANSFER">Bank Transfer (NEFT/IMPS)</option>
+                            <option value="CHEQUE">Cheque</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="reference-field-group" style="display:none;">
+                        <label>Transaction / Reference Number *</label>
+                        <input type="text" class="form-control" id="payment-reference" th:field="*{paymentReference}"
+                               placeholder="e.g. UPI Ref, NEFT number, Cheque number">
+                        <div class="field-hint">Required for UPI, Bank Transfer and Cheque payments.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Remarks</label>
+                        <input type="text" class="form-control" th:field="*{remarks}" placeholder="Optional note">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width:100%">Pay Salary</button>
+                </form>
+            </div>
+
+            <!-- Payment History -->
+            <div class="card">
+                <h3 style="margin-top:0;">Payment History</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Month / Year</th>
+                            <th>Basic</th>
+                            <th>Bonus</th>
+                            <th>Deductions</th>
+                            <th>Net Paid</th>
+                            <th>Date</th>
+                            <th>Mode</th>
+                            <th>Reference</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="sp : ${payments}">
+                            <td th:text="${sp.payMonth + '/' + sp.payYear}"></td>
+                            <td>₹<span th:text="${#numbers.formatDecimal(sp.basicSalary, 0, 'COMMA', 2, 'POINT')}"></span></td>
+                            <td>₹<span th:text="${#numbers.formatDecimal(sp.bonus, 0, 'COMMA', 2, 'POINT')}"></span></td>
+                            <td>₹<span th:text="${#numbers.formatDecimal(sp.deductions, 0, 'COMMA', 2, 'POINT')}"></span></td>
+                            <td><span class="badge badge-success">₹<span th:text="${#numbers.formatDecimal(sp.netSalary, 0, 'COMMA', 2, 'POINT')}"></span></span></td>
+                            <td th:text="${#temporals.format(sp.paymentDate, 'dd MMM yyyy')}"></td>
+                            <td th:text="${sp.paymentMode}"></td>
+                            <td th:text="${sp.paymentReference != null} ? ${sp.paymentReference} : '—'"></td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(payments)}">
+                            <td colspan="8">
+                                <div class="empty-state">No salary payments recorded yet.</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    // Show the reference field only when a digital payment mode is selected
+    function toggleSalaryReference() {
+        var mode = document.getElementById('payment-mode').value;
+        var group = document.getElementById('reference-field-group');
+        var input = document.getElementById('payment-reference');
+        var needsReference = mode === 'UPI' || mode === 'BANK_TRANSFER' || mode === 'CHEQUE';
+        group.style.display = needsReference ? 'block' : 'none';
+        input.required = needsReference;
+    }
+    // Run once on page load in case the mode was already selected (e.g. after a validation error)
+    toggleSalaryReference();
+</script>
+</body>
+</html>

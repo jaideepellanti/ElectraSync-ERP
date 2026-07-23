@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Purchase Orders — ElectraSync ERP</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" th:href="@{/css/style.css}"></head>
+<body><div class="app-shell">
+<div th:replace="~{partials/sidebar :: sidebar}"></div>
+<div class="main-content">
+    <div th:replace="~{partials/flash-messages :: flashMessages}"></div>
+  <div class="topbar">
+    <div><h1>📥 Purchase Orders</h1><div class="subtitle">Track goods ordered from vendors</div></div>
+    <a th:href="@{/manager/purchase-orders/new}" class="btn btn-primary">+ New Purchase Order</a>
+  </div>
+  <div class="card">
+    <table class="data-table">
+      <thead><tr><th>PO Number</th><th>Vendor</th><th>Order Date</th><th>Total</th><th>Amount Paid</th><th>Amount Due</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>
+        <tr th:each="po : ${orders}">
+          <td><strong th:text="${po.poNumber}"></strong></td>
+          <td th:text="${po.vendor.companyName}"></td>
+          <td th:text="${#temporals.format(po.orderDate,'dd MMM yyyy')}"></td>
+          <td>₹<span th:text="${#numbers.formatDecimal(po.totalAmount,0,'COMMA',2,'POINT')}"></span></td>
+          <td>₹<span th:text="${#numbers.formatDecimal(po.amountPaid,0,'COMMA',2,'POINT')}"></span></td>
+          <td>
+            <span th:class="${po.amountDue.compareTo(T(java.math.BigDecimal).ZERO) > 0} ? 'badge badge-warning' : 'badge badge-success'"
+                  th:text="'₹' + ${#numbers.formatDecimal(po.amountDue,0,'COMMA',2,'POINT')}"></span>
+          </td>
+          <td>
+            <span th:switch="${po.status.name()}">
+              <span th:case="'PENDING'" class="badge badge-warning">Pending</span>
+              <span th:case="'RECEIVED'" class="badge badge-success">Received</span>
+              <span th:case="'CANCELLED'" class="badge badge-danger">Cancelled</span>
+              <span th:case="*" class="badge badge-neutral" th:text="${po.status}"></span>
+            </span>
+          </td>
+          <td><a th:href="@{/manager/purchase-orders/view/{id}(id=${po.id})}" class="btn btn-outline btn-sm">View</a></td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(orders)}"><td colspan="8" class="empty-state">No purchase orders yet.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div></div></body></html>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Low Stock — ElectraSync ERP</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" th:href="@{/css/style.css}"></head>
+<body><div class="app-shell">
+<div th:replace="~{partials/sidebar :: sidebar}"></div>
+<div class="main-content">
+    <div th:replace="~{partials/flash-messages :: flashMessages}"></div>
+  <div class="topbar">
+    <div><h1>⚠️ Low Stock Alert</h1><div class="subtitle">These products need to be reordered soon</div></div>
+    <a th:href="@{/manager/purchase-orders/new}" class="btn btn-primary">Create Purchase Order</a>
+  </div>
+  <div class="card">
+    <table class="data-table">
+      <thead><tr><th>SKU</th><th>Product</th><th>Category</th><th>Current Stock</th><th>Minimum</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr th:each="p : ${products}">
+          <td><code th:text="${p.sku}"></code></td>
+          <td th:text="${p.name}"></td>
+          <td th:text="${p.category.name}"></td>
+          <td><span class="badge badge-danger" th:text="${p.stockQuantity}"></span></td>
+          <td th:text="${p.minimumStock}"></td>
+          <td><a th:href="@{/manager/products/edit/{id}(id=${p.id})}" class="btn btn-outline btn-sm">Edit</a></td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(products)}"><td colspan="6" class="empty-state">🎉 All products have sufficient stock!</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div></div></body></html>

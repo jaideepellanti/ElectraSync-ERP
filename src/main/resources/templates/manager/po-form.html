@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>New Purchase Order — ElectraSync ERP</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" th:href="@{/css/style.css}">
+<style>
+  .item-row { display:grid; grid-template-columns:2.5fr 1fr 1fr auto; gap:10px; align-items:end; margin-bottom:10px; }
+  #items-container .item-row:first-child { display:grid; grid-template-columns:2.5fr 1fr 1fr auto; gap:10px; }
+</style>
+</head>
+<body><div class="app-shell">
+<div th:replace="~{partials/sidebar :: sidebar}"></div>
+<div class="main-content">
+    <div th:replace="~{partials/flash-messages :: flashMessages}"></div>
+  <div class="topbar">
+    <div><h1>📥 New Purchase Order</h1><div class="subtitle">Order products from a vendor</div></div>
+    <a th:href="@{/manager/purchase-orders}" class="btn btn-outline">← Back</a>
+  </div>
+  <div class="card" style="max-width:860px;">
+    <form th:action="@{/manager/purchase-orders/save}" method="post">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Vendor *</label>
+          <select class="form-control" name="vendor.id" required>
+            <option value="">-- Select Vendor --</option>
+            <option th:each="v : ${vendors}" th:value="${v.id}" th:text="${v.companyName}"></option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Order Date</label>
+          <input type="date" class="form-control" name="orderDate" th:value="${#temporals.format(po.orderDate,'yyyy-MM-dd')}">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Notes</label>
+        <input type="text" class="form-control" name="notes" placeholder="Optional notes for this order">
+      </div>
+
+      <h3 style="margin-bottom:10px;">Order Items</h3>
+      <div style="display:grid;grid-template-columns:2.5fr 1fr 1fr auto;gap:10px;margin-bottom:6px;">
+        <span style="font-size:12px;font-weight:600;color:#5a5f78;text-transform:uppercase;">Product</span>
+        <span style="font-size:12px;font-weight:600;color:#5a5f78;text-transform:uppercase;">Qty</span>
+        <span style="font-size:12px;font-weight:600;color:#5a5f78;text-transform:uppercase;">Unit Cost (₹)</span>
+        <span></span>
+      </div>
+
+      <div id="items-container">
+        <div class="item-row">
+          <select class="form-control" name="items[0].product.id" required>
+            <option value="">-- Select Product --</option>
+            <option th:each="p : ${products}" th:value="${p.id}" th:text="${p.name + ' (' + p.sku + ')'}"></option>
+          </select>
+          <input type="number" class="form-control" name="items[0].quantity" placeholder="Qty" min="1" required>
+          <input type="number" class="form-control" name="items[0].unitCostPrice" placeholder="0.00" step="0.01" min="0" required>
+          <span></span>
+        </div>
+      </div>
+
+      <button type="button" class="btn btn-outline" style="margin:10px 0 20px;" id="add-row">+ Add Item</button>
+
+      <div><button type="submit" class="btn btn-primary">Create Purchase Order</button></div>
+    </form>
+  </div>
+</div></div>
+<script>
+var rowCount = 1;
+document.getElementById('add-row').onclick = function() {
+  var html = '<div class="item-row">' +
+    '<select class="form-control" name="items[' + rowCount + '].product.id" required>' +
+    '<option value="">-- Select Product --</option>' +
+    document.querySelectorAll('#items-container select')[0].innerHTML +
+    '</select>' +
+    '<input type="number" class="form-control" name="items[' + rowCount + '].quantity" placeholder="Qty" min="1" required>' +
+    '<input type="number" class="form-control" name="items[' + rowCount + '].unitCostPrice" placeholder="0.00" step="0.01" min="0" required>' +
+    '<button type="button" class="btn btn-danger btn-sm" onclick="this.parentNode.remove()">✕</button>' +
+    '</div>';
+  document.getElementById('items-container').insertAdjacentHTML('beforeend', html);
+  rowCount++;
+};
+</script>
+</body></html>

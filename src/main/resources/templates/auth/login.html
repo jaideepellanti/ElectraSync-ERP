@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sign in — ElectraSync ERP</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="login-page">
+    <div class="login-card">
+
+        <div class="login-brand">
+            <span class="bolt">⚡</span>
+            <h1>ElectraSync ERP</h1>
+            <p>Electronics Retail &amp; POS Management</p>
+        </div>
+
+        <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+        <div th:if="${logoutMessage}" class="alert alert-success" th:text="${logoutMessage}"></div>
+        <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+
+        <form method="post" th:action="@{/login}">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" class="form-control"
+                       required autofocus placeholder="Enter your username">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" class="form-control"
+                       required placeholder="Enter your password">
+            </div>
+            <button type="submit" class="btn btn-primary"
+                    style="width:100%; justify-content:center; padding:11px;">
+                Sign In
+            </button>
+        </form>
+
+        <p class="text-muted" style="text-align:center; margin-top:18px; font-size:12px;">
+            Contact your system administrator if you forgot your credentials.
+        </p>
+
+    </div>
+</body>
+</html>

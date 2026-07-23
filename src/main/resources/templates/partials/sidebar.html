@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+<div th:fragment="sidebar" class="sidebar">
+
+    <div class="sidebar-brand">
+        <span class="bolt">⚡</span> ElectraSync
+    </div>
+
+    <div class="sidebar-nav">
+        <div class="sidebar-section-label">Overview</div>
+        <a th:href="@{/dashboard}">📊 Dashboard</a>
+
+        <div class="sidebar-section-label">Sales</div>
+        <a th:href="@{/pos}">🛒 New Sale (POS)</a>
+        <a th:href="@{/sales}">🧾 Sales History</a>
+
+        <div class="sidebar-section-label" sec:authorize="hasAnyRole('OWNER','MANAGER')">Inventory</div>
+        <a sec:authorize="hasAnyRole('OWNER','MANAGER')" th:href="@{/manager/products}">📦 Products</a>
+        <a sec:authorize="hasAnyRole('OWNER','MANAGER')" th:href="@{/manager/products/low-stock}">⚠️ Low Stock</a>
+        <a sec:authorize="hasAnyRole('OWNER','MANAGER')" th:href="@{/manager/products/categories}">🏷️ Categories</a>
+        <a sec:authorize="hasAnyRole('OWNER','MANAGER')" th:href="@{/manager/products/brands}">🏭 Brands</a>
+
+        <div class="sidebar-section-label" sec:authorize="hasAnyRole('OWNER','MANAGER')">Purchasing</div>
+        <a sec:authorize="hasAnyRole('OWNER','MANAGER')" th:href="@{/manager/vendors}">🚚 Vendors</a>
+        <a sec:authorize="hasAnyRole('OWNER','MANAGER')" th:href="@{/manager/purchase-orders}">📥 Purchase Orders</a>
+
+        <div class="sidebar-section-label" sec:authorize="hasAnyRole('OWNER','MANAGER')">People</div>
+        <a sec:authorize="hasAnyRole('OWNER','MANAGER')" th:href="@{/manager/customers}">👤 Customers</a>
+        <a sec:authorize="hasRole('OWNER')" th:href="@{/owner/employees}">🧑‍💼 Employees</a>
+        <a sec:authorize="hasRole('OWNER')" th:href="@{/owner/users}">🔐 Staff Logins</a>
+
+        <div class="sidebar-section-label" sec:authorize="hasRole('OWNER')">Finance</div>
+        <a sec:authorize="hasRole('OWNER')" th:href="@{/owner/reports/profit-loss}">💰 Profit &amp; Loss</a>
+    </div>
+
+    <div class="sidebar-footer">
+        <span>Signed in as <strong th:text="${#authentication.name}">user</strong></span>
+        <!-- BUG FIX: Logout must be a POST form, not an <a> link.
+             Spring Security rejects GET logout requests for security reasons. -->
+        <form th:action="@{/logout}" method="post" style="margin-top:8px;">
+            <button type="submit" class="logout-btn">Sign out</button>
+        </form>
+    </div>
+
+</div>
+</body>
+</html>

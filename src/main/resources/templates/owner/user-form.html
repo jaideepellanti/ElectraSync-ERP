@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Create Login — ElectraSync ERP</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{partials/sidebar :: sidebar}"></div>
+    <div class="main-content">
+
+        <div class="page-header">
+            <div><h1>Create Staff Login</h1></div>
+            <a th:href="@{/owner/users}" class="btn btn-outline">← Back</a>
+        </div>
+
+        <div th:replace="~{partials/flash-messages :: flashMessages}"></div>
+
+        <div class="card" style="max-width:560px;">
+            <div th:if="${employeeId}" class="alert alert-success" style="font-size:13px; margin-bottom:14px;">
+                Creating a login for this employee. It will be linked to their HR record automatically.
+            </div>
+            <form th:action="@{/owner/users/save}" method="post" th:object="${user}">
+                <input th:if="${employeeId}" type="hidden" name="employeeId" th:value="${employeeId}">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Full Name *</label>
+                        <input type="text" class="form-control" th:field="*{fullName}" required maxlength="100">
+                    </div>
+                    <div class="form-group">
+                        <label>Username *</label>
+                        <input type="text" class="form-control" th:field="*{username}" required maxlength="50"
+                               placeholder="Used to sign in">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Email *</label>
+                        <input type="email" class="form-control" th:field="*{email}" required maxlength="100">
+                    </div>
+                    <div class="form-group">
+                        <label>Password *</label>
+                        <input type="password" class="form-control" name="rawPassword" required minlength="6"
+                               placeholder="Minimum 6 characters">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Role *</label>
+                    <select class="form-control" th:field="*{role}" required>
+                        <option th:each="r : ${roles}" th:value="${r}" th:text="${r}"></option>
+                    </select>
+                </div>
+                <div class="alert alert-warning" style="font-size:12.5px; margin-top:4px;">
+                    <strong>OWNER</strong> — Full access to all modules including finance and employee salary.<br>
+                    <strong>MANAGER</strong> — Inventory, vendors, purchase orders, customers.<br>
+                    <strong>CASHIER</strong> — POS billing and sales history only.
+                </div>
+                <div style="display:flex; gap:10px; margin-top:8px;">
+                    <button type="submit" class="btn btn-primary">Create Login</button>
+                    <a th:href="@{/owner/users}" class="btn btn-outline">Cancel</a>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

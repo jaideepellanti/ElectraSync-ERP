@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Purchase Order — ElectraSync ERP</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" th:href="@{/css/style.css}"></head>
+<body><div class="app-shell">
+<div th:replace="~{partials/sidebar :: sidebar}"></div>
+<div class="main-content">
+    <div th:replace="~{partials/flash-messages :: flashMessages}"></div>
+  <div class="topbar">
+    <div><h1 th:text="'Purchase Order: ' + ${po.poNumber}"></h1></div>
+    <div style="display:flex;gap:8px;">
+      <a th:href="@{/manager/purchase-orders}" class="btn btn-outline">← Back</a>
+      <form th:if="${po.status.name() != 'RECEIVED' and po.status.name() != 'CANCELLED'}" th:action="@{/manager/purchase-orders/receive/{id}(id=${po.id})}" method="post" style="display:inline;">
+        <button type="submit" class="btn btn-accent" onclick="return confirm('Mark as received? Stock will be updated.')">✅ Mark as Received</button>
+      </form>
+      <form th:if="${po.status.name() == 'PENDING'}" th:action="@{/manager/purchase-orders/cancel/{id}(id=${po.id})}" method="post" style="display:inline;">
+        <button type="submit" class="btn btn-danger" onclick="return confirm('Cancel this order?')">Cancel Order</button>
+      </form>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:20px;">
+    <div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;margin-bottom:12px;">
+          <div>
+            <div class="text-muted" style="font-size:12px;">Vendor</div>
+            <strong th:text="${po.vendor.companyName}"></strong>
+            <div class="text-muted" style="font-size:12.5px;" th:text="${po.vendor.contactPerson + ' · ' + po.vendor.phone}"></div>
+          </div>
+          <span th:switch="${po.status.name()}">
+            <span th:case="'PENDING'" class="badge badge-warning" style="align-self:flex-start;">Pending</span>
+            <span th:case="'RECEIVED'" class="badge badge-success" style="align-self:flex-start;">Received</span>
+            <span th:case="'CANCELLED'" class="badge badge-danger" style="align-self:flex-start;">Cancelled</span>
+            <span th:case="*" class="badge badge-neutral" th:text="${po.status}"></span>
+          </span>
+        </div>
+        <div style="display:flex;gap:30px;font-size:13px;">
+          <div><div class="text-muted">Order Date</div><strong th:text="${#temporals.format(po.orderDate,'dd MMM yyyy')}"></strong></div>
+          <div th:if="${po.deliveryDate}"><div class="text-muted">Delivery Date</div><strong th:text="${#temporals.format(po.deliveryDate,'dd MMM yyyy')}"></strong></div>
+        </div>
+        <div th:if="${po.notes}" style="margin-top:12px;font-size:13px;"><span class="text-muted">Notes: </span><span th:text="${po.notes}"></span></div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0;">Order Items</h3>
+        <table class="data-table">
+          <thead><tr><th>Product</th><th>Qty</th><th>Unit Cost</th><th>Line Total</th></tr></thead>
+          <tbody>
+            <tr th:each="item : ${po.items}">
+              <td th:text="${item.product.name}"></td>
+              <td th:text="${item.quantity}"></td>
+              <td>₹<span th:text="${#numbers.formatDecimal(item.unitCostPrice,0,'COMMA',2,'POINT')}"></span></td>
+              <td>₹<span th:text="${#numbers.formatDecimal(item.lineTotal,0,'COMMA',2,'POINT')}"></span></td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr><td colspan="3" style="text-align:right;font-weight:700;">Total</td>
+                <td>₹<strong th:text="${#numbers.formatDecimal(po.totalAmount,0,'COMMA',2,'POINT')}"></strong></td></tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0;">💳 Payment to Vendor</h3>
+        <div style="margin-bottom:14px;font-size:13.5px;">
+          <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--color-border);">
+            <span>Total Amount</span><strong>₹<span th:text="${#numbers.formatDecimal(po.totalAmount,0,'COMMA',2,'POINT')}"></span></strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--color-border);">
+            <span>Amount Paid</span><span class="badge badge-success">₹<span th:text="${#numbers.formatDecimal(po.amountPaid,0,'COMMA',2,'POINT')}"></span></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:6px 0;">
+            <span style="font-weight:700;">Amount Due</span>
+            <span th:class="${po.amountDue.compareTo(T(java.math.BigDecimal).ZERO) > 0} ? 'badge badge-warning' : 'badge badge-success'"
+                  th:text="'₹' + ${#numbers.formatDecimal(po.amountDue,0,'COMMA',2,'POINT')}"></span>
+          </div>
+        </div>
+        <form th:if="${po.amountDue.compareTo(T(java.math.BigDecimal).ZERO) > 0}" th:action="@{/manager/purchase-orders/pay/{id}(id=${po.id})}" method="post">
+          <div class="form-group"><label>Record Payment (₹)</label>
+            <input type="number" class="form-control" name="amount" step="0.01" min="0.01" th:max="${po.amountDue}" placeholder="Enter amount paid to vendor" required></div>
+          <button type="submit" class="btn btn-primary">Record Payment</button>
+        </form>
+        <div th:if="${po.amountDue.compareTo(T(java.math.BigDecimal).ZERO) <= 0}" class="badge badge-success" style="font-size:13px;">✅ Fully Paid</div>
+      </div>
+    </div>
+  </div>
+</div></div></body></html>

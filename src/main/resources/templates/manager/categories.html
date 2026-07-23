@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Categories — ElectraSync ERP</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{partials/sidebar :: sidebar}"></div>
+    <div class="main-content">
+        <div th:replace="~{partials/flash-messages :: flashMessages}"></div>
+
+        <div class="page-header">
+            <div>
+                <h1>🏷️ Product Categories</h1>
+                <div class="subtitle">Categories help organise products (e.g. Televisions, Mobiles, Laptops)</div>
+            </div>
+            <a th:href="@{/manager/products}" class="btn btn-outline">← Products</a>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1.8fr; gap:20px;">
+
+            <!-- Add / Edit Category Form -->
+            <div class="card">
+                <h3 style="margin-top:0;" th:text="${category.id == null} ? 'Add New Category' : 'Edit Category'"></h3>
+                <form th:action="@{/manager/products/categories/save}" method="post" th:object="${category}">
+                    <input type="hidden" th:field="*{id}">
+                    <div class="form-group">
+                        <label>Category Name *</label>
+                        <input type="text" class="form-control" th:field="*{name}"
+                               required placeholder="e.g. Televisions" maxlength="100">
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <input type="text" class="form-control" th:field="*{description}"
+                               placeholder="Optional description" maxlength="255">
+                    </div>
+                    <button class="btn btn-primary" type="submit"
+                            th:text="${category.id == null} ? 'Add Category' : 'Update Category'"></button>
+                    <a th:if="${category.id != null}" th:href="@{/manager/products/categories}" class="btn btn-outline">Cancel</a>
+                </form>
+            </div>
+
+            <!-- Categories List -->
+            <div class="card">
+                <h3 style="margin-top:0;">All Categories (<span th:text="${#lists.size(categories)}">0</span>)</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Category Name</th>
+                            <th>Description</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="c, stat : ${categories}">
+                            <td th:text="${stat.count}"></td>
+                            <td><strong th:text="${c.name}"></strong></td>
+                            <td th:text="${c.description != null} ? ${c.description} : '—'"></td>
+                            <td>
+                                <a th:href="@{/manager/products/categories/edit/{id}(id=${c.id})}" class="btn btn-outline btn-sm">Edit</a>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(categories)}">
+                            <td colspan="4">
+                                <div class="empty-state">
+                                    <span class="empty-icon">🏷️</span>
+                                    No categories yet. Add one using the form.
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>
+</body>
+</html>

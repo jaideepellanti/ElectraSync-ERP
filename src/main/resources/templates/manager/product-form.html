@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Product Form — ElectraSync ERP</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{partials/sidebar :: sidebar}"></div>
+    <div class="main-content">
+
+        <div class="page-header">
+            <div>
+                <h1 th:text="${product.id == null} ? 'Add New Product' : 'Edit Product'"></h1>
+                <div class="subtitle" th:text="${product.id == null} ? 'Fill in the product details below' : 'Update product details'"></div>
+            </div>
+            <a th:href="@{/manager/products}" class="btn btn-outline">← Back to Products</a>
+        </div>
+
+        <div th:replace="~{partials/flash-messages :: flashMessages}"></div>
+
+        <div th:if="${product.id == null}" class="alert" style="background:#eef2ff; color:#3730a3; border:1px solid #c7d2fe; font-size:13px; line-height:1.6;">
+            <strong>ℹ️ How stock works in ElectraSync:</strong><br>
+            Every new product starts at <strong>0 stock</strong>. There is no way to manually type in a
+            stock number — this is intentional. To bring stock into the store, go to
+            <strong>Purchase Orders → New</strong>, select this product and a vendor, enter the quantity
+            and price you're paying, then mark the order as <strong>Received</strong>. This keeps a full
+            record of exactly which vendor supplied every unit and what you paid for it.
+            Stock decreases automatically when a sale is made.
+        </div>
+
+        <div class="card" style="max-width:760px;">
+            <form th:action="@{/manager/products/save}" method="post" th:object="${product}">
+                <input type="hidden" th:field="*{id}">
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="sku">SKU (Stock Keeping Unit) *</label>
+                        <input type="text" id="sku" class="form-control" th:field="*{sku}"
+                               required placeholder="e.g. SAM-TV-55-4K" maxlength="30">
+                        <div class="field-hint">Unique code to identify this product. Cannot be changed later.</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="name">Product Name *</label>
+                        <input type="text" id="name" class="form-control" th:field="*{name}"
+                               required placeholder="e.g. Samsung 55-inch 4K Smart TV" maxlength="200">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" class="form-control" th:field="*{description}"
+                              rows="2" placeholder="Brief description (optional)" maxlength="500"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="category">Category *</label>
+                        <select id="category" class="form-control" th:field="*{category.id}" required>
+                            <option value="">-- Select Category --</option>
+                            <option th:each="c : ${categories}" th:value="${c.id}" th:text="${c.name}"></option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="brand">Brand *</label>
+                        <select id="brand" class="form-control" th:field="*{brand.id}" required>
+                            <option value="">-- Select Brand --</option>
+                            <option th:each="b : ${brands}" th:value="${b.id}" th:text="${b.name}"></option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="costPrice">Cost Price (₹) *</label>
+                        <input type="number" id="costPrice" class="form-control" th:field="*{costPrice}"
+                               step="0.01" min="0.01" required placeholder="0.00">
+                        <div class="field-hint">Price you paid the vendor to procure this product.</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="sellingPrice">Selling Price (₹) *</label>
+                        <input type="number" id="sellingPrice" class="form-control" th:field="*{sellingPrice}"
+                               step="0.01" min="0.01" required placeholder="0.00">
+                        <div class="field-hint">Price you charge the customer. Must be ≥ cost price.</div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group" th:if="${product.id != null}">
+                        <label>Current Stock Quantity</label>
+                        <input type="text" class="form-control" th:value="${product.stockQuantity}" disabled>
+                        <div class="field-hint">
+                            Stock can only be increased via Purchase Orders (Vendor → Receive Order),
+                            or reduced by Sales/Returns. It cannot be edited directly here.
+                        </div>
+                    </div>
+                    <div class="form-group" th:if="${product.id == null}">
+                        <label>Stock Quantity</label>
+                        <input type="text" class="form-control" value="0" disabled>
+                        <div class="field-hint">
+                            New products always start at 0 stock. After saving, create a
+                            <strong>Purchase Order</strong> for this product and mark it as
+                            <strong>Received</strong> to bring stock in — this records exactly
+                            which vendor supplied it and how much you paid.
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="minimumStock">Minimum Stock (Alert Threshold) *</label>
+                        <input type="number" id="minimumStock" class="form-control" th:field="*{minimumStock}"
+                               min="0" required
+                               th:value="${product.minimumStock != null} ? ${product.minimumStock} : 5">
+                        <div class="field-hint">Low stock alert triggers when stock reaches this level.</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label style="display:flex; justify-content:space-between; align-items:center;">
+                        <span>Specifications</span>
+                        <button type="button" class="btn btn-outline btn-sm" id="add-spec-row">+ Add Spec</button>
+                    </label>
+                    <div class="field-hint" style="margin-bottom:8px;">
+                        Add details specific to this product's category — e.g. RAM/Storage/Color for a mobile,
+                        Screen Size/Resolution for a TV. These will be shown to the cashier during billing.
+                    </div>
+
+                    <div id="spec-rows-container">
+                        <!-- Pre-fill existing specs when editing -->
+                        <div class="spec-row" style="display:flex; gap:8px; margin-bottom:8px;"
+                             th:each="spec : ${product.specifications}">
+                            <input type="text" name="specNames" class="form-control" placeholder="Spec name (e.g. RAM)"
+                                   th:value="${spec.specName}" style="flex:1;">
+                            <input type="text" name="specValues" class="form-control" placeholder="Value (e.g. 8GB)"
+                                   th:value="${spec.specValue}" style="flex:1;">
+                            <button type="button" class="btn btn-danger btn-sm remove-spec-row">✕</button>
+                        </div>
+
+                        <!-- One empty row shown by default when adding a new product -->
+                        <div class="spec-row" style="display:flex; gap:8px; margin-bottom:8px;"
+                             th:if="${#lists.isEmpty(product.specifications)}">
+                            <input type="text" name="specNames" class="form-control" placeholder="Spec name (e.g. RAM)" style="flex:1;">
+                            <input type="text" name="specValues" class="form-control" placeholder="Value (e.g. 8GB)" style="flex:1;">
+                            <button type="button" class="btn btn-danger btn-sm remove-spec-row">✕</button>
+                        </div>
+                    </div>
+
+                    <div id="spec-suggestions" style="margin-top:6px; font-size:12px; color:var(--color-ink-soft);"></div>
+                </div>
+
+                <div class="form-group">
+                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                        <input type="checkbox" th:field="*{active}">
+                        <span>Active — visible in POS billing screen</span>
+                    </label>
+                </div>
+
+                <div style="display:flex; gap:10px; margin-top:8px;">
+                    <button type="submit" class="btn btn-primary">
+                        <span th:text="${product.id == null} ? 'Add Product' : 'Save Changes'"></span>
+                    </button>
+                    <a th:href="@{/manager/products}" class="btn btn-outline">Cancel</a>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // Add a new empty specification row
+    document.getElementById('add-spec-row').addEventListener('click', function () {
+        addSpecRow('', '');
+    });
+
+    function addSpecRow(name, value) {
+        var container = document.getElementById('spec-rows-container');
+        var row = document.createElement('div');
+        row.className = 'spec-row';
+        row.style.display = 'flex';
+        row.style.gap = '8px';
+        row.style.marginBottom = '8px';
+        row.innerHTML =
+            '<input type="text" name="specNames" class="form-control" placeholder="Spec name (e.g. RAM)" style="flex:1;" value="' + escapeHtml(name) + '">' +
+            '<input type="text" name="specValues" class="form-control" placeholder="Value (e.g. 8GB)" style="flex:1;" value="' + escapeHtml(value) + '">' +
+            '<button type="button" class="btn btn-danger btn-sm remove-spec-row">✕</button>';
+        container.appendChild(row);
+        attachRemoveHandler(row.querySelector('.remove-spec-row'));
+    }
+
+    function escapeHtml(text) {
+        var div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Remove a specification row (but never remove the very last one, so the form always has at least one)
+    function attachRemoveHandler(button) {
+        button.addEventListener('click', function () {
+            var container = document.getElementById('spec-rows-container');
+            if (container.children.length > 1) {
+                button.closest('.spec-row').remove();
+            } else {
+                // Just clear the values instead of removing the only row
+                var row = button.closest('.spec-row');
+                row.querySelectorAll('input').forEach(function (input) { input.value = ''; });
+            }
+        });
+    }
+
+    // Attach remove handlers to any rows already present on page load (edit mode)
+    document.querySelectorAll('.remove-spec-row').forEach(attachRemoveHandler);
+
+    // When the manager picks a category, fetch suggested spec names for it
+    // and show them as clickable chips so specs can be added quickly.
+    var categorySelect = document.getElementById('category');
+    if (categorySelect) {
+        categorySelect.addEventListener('change', function () {
+            var categoryId = categorySelect.value;
+            var suggestionsBox = document.getElementById('spec-suggestions');
+            suggestionsBox.innerHTML = '';
+
+            if (!categoryId) return;
+
+            fetch('/manager/products/spec-suggestions?categoryId=' + categoryId)
+                .then(function (response) { return response.json(); })
+                .then(function (suggestedNames) {
+                    if (!suggestedNames || suggestedNames.length === 0) return;
+
+                    var label = document.createElement('span');
+                    label.textContent = 'Suggested: ';
+                    suggestionsBox.appendChild(label);
+
+                    suggestedNames.forEach(function (specName) {
+                        var chip = document.createElement('button');
+                        chip.type = 'button';
+                        chip.className = 'btn btn-outline btn-sm';
+                        chip.style.marginRight = '6px';
+                        chip.style.marginBottom = '4px';
+                        chip.textContent = '+ ' + specName;
+                        chip.addEventListener('click', function () {
+                            addSpecRow(specName, '');
+                        });
+                        suggestionsBox.appendChild(chip);
+                    });
+                })
+                .catch(function () { /* silently ignore - suggestions are optional */ });
+        });
+    }
+</script>
+</body>
+</html>

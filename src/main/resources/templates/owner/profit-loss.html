@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>P&amp;L Report — ElectraSync ERP</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" th:href="@{/css/style.css}"></head>
+<body><div class="app-shell">
+<div th:replace="~{partials/sidebar :: sidebar}"></div>
+<div class="main-content">
+    <div th:replace="~{partials/flash-messages :: flashMessages}"></div>
+  <div class="topbar">
+    <div><h1>💰 Profit &amp; Loss Report</h1></div>
+    <form th:action="@{/owner/reports/profit-loss}" method="get" style="display:flex;gap:10px;align-items:flex-end;">
+      <div class="form-group" style="margin:0;">
+        <label>Month</label>
+        <select class="form-control" name="month" style="width:130px;">
+          <option th:each="m : ${#numbers.sequence(1,12)}" th:value="${m}"
+                  th:text="${#temporals.format(T(java.time.LocalDate).of(2000,m,1),'MMMM')}"
+                  th:selected="${yearMonth.monthValue == m}"></option>
+        </select>
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label>Year</label>
+        <input type="number" class="form-control" name="year" th:value="${yearMonth.year}" style="width:90px;">
+      </div>
+      <button type="submit" class="btn btn-primary">View Report</button>
+    </form>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
+    <div class="card">
+      <h2 style="margin-top:0;font-size:15px;color:var(--color-ink-soft);">
+        Report: <span th:text="${#temporals.format(T(java.time.LocalDate).of(yearMonth.year,yearMonth.monthValue,1),'MMMM yyyy')}"></span>
+      </h2>
+
+      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--color-border);font-size:14px;">
+        <span>Total Revenue</span>
+        <strong style="color:var(--color-primary-dark);">₹<span th:text="${#numbers.formatDecimal(revenue,0,'COMMA',2,'POINT')}"></span></strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--color-border);font-size:14px;">
+        <span>Gross Profit (Revenue − Cost of Goods)</span>
+        <strong style="color:var(--color-success);">₹<span th:text="${#numbers.formatDecimal(grossProfit,0,'COMMA',2,'POINT')}"></span></strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--color-border);font-size:14px;">
+        <span>Salary Expenses (Paid this month)</span>
+        <strong style="color:var(--color-danger);">− ₹<span th:text="${#numbers.formatDecimal(salaryExpense,0,'COMMA',2,'POINT')}"></span></strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:14px 0;font-size:18px;font-weight:800;"
+           th:classappend="${netProfit.compareTo(T(java.math.BigDecimal).ZERO) >= 0} ? '' : 'style=color:var(--color-danger)'">
+        <span>NET PROFIT</span>
+        <span th:style="${netProfit.compareTo(T(java.math.BigDecimal).ZERO) < 0} ? 'color:var(--color-danger)' : 'color:var(--color-success)'"
+              th:text="'₹' + ${#numbers.formatDecimal(netProfit,0,'COMMA',2,'POINT')}"></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0;">Quick Ratios</h3>
+      <div style="font-size:13.5px;">
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--color-border);">
+          <span>Gross Margin</span>
+          <strong th:text="${revenue.compareTo(T(java.math.BigDecimal).ZERO) > 0} ?
+            ${#numbers.formatDecimal(grossProfit.multiply(T(java.math.BigDecimal).valueOf(100)).divide(revenue,2,T(java.math.RoundingMode).HALF_UP),0,'COMMA',1,'POINT') + '%'} : 'N/A'"></strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--color-border);">
+          <span>Net Margin</span>
+          <strong th:text="${revenue.compareTo(T(java.math.BigDecimal).ZERO) > 0} ?
+            ${#numbers.formatDecimal(netProfit.multiply(T(java.math.BigDecimal).valueOf(100)).divide(revenue,2,T(java.math.RoundingMode).HALF_UP),0,'COMMA',1,'POINT') + '%'} : 'N/A'"></strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;">
+          <span>Total Transactions</span>
+          <strong th:text="${salesList.size()}"></strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0;">Transactions this Month</h3>
+    <table class="data-table">
+      <thead><tr><th>Invoice</th><th>Date</th><th>Customer</th><th>Amount</th><th>Payment</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr th:each="s : ${salesList}">
+          <td><a th:href="@{/pos/invoice/{id}(id=${s.id})}" th:text="${s.invoiceNumber}"></a></td>
+          <td th:text="${#temporals.format(s.saleDate,'dd MMM')}"></td>
+          <td th:text="${s.customer != null ? s.customer.fullName : (s.walkInCustomerName != null ? s.walkInCustomerName : 'Walk-in')}"></td>
+          <td>₹<span th:text="${#numbers.formatDecimal(s.totalAmount,0,'COMMA',2,'POINT')}"></span></td>
+          <td th:text="${s.paymentMethod}"></td>
+          <td><span th:class="${s.status.name() == 'COMPLETED'} ? 'badge badge-success' : 'badge badge-danger'" th:text="${s.status}"></span></td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(salesList)}"><td colspan="6" class="empty-state">No sales this month.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div></div></body></html>

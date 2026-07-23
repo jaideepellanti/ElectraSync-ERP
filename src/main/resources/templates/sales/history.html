@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Sales History — ElectraSync ERP</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" th:href="@{/css/style.css}"></head>
+<body><div class="app-shell">
+<div th:replace="~{partials/sidebar :: sidebar}"></div>
+<div class="main-content">
+    <div th:replace="~{partials/flash-messages :: flashMessages}"></div>
+  <div class="topbar">
+    <div><h1>🧾 Sales History</h1></div>
+  </div>
+
+  <div class="card">
+    <form th:action="@{/sales}" method="get" style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
+      <div class="form-group" style="margin:0;">
+        <label>From</label>
+        <input type="date" class="form-control" name="from" th:value="${from}">
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label>To</label>
+        <input type="date" class="form-control" name="to" th:value="${to}">
+      </div>
+      <button type="submit" class="btn btn-primary">Filter</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <table class="data-table">
+      <thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>
+        <tr th:each="s : ${sales}">
+          <td><strong th:text="${s.invoiceNumber}"></strong></td>
+          <td th:text="${#temporals.format(s.saleDate,'dd MMM yyyy')}"></td>
+          <td th:text="${s.customer != null ? s.customer.fullName : (s.walkInCustomerName != null ? s.walkInCustomerName : 'Walk-in')}"></td>
+          <td th:text="${s.saleItems != null ? s.saleItems.size() : 0}"></td>
+          <td>₹<span th:text="${#numbers.formatDecimal(s.totalAmount,0,'COMMA',2,'POINT')}"></span></td>
+          <td th:text="${s.paymentMethod}"></td>
+          <td>
+            <span th:switch="${s.status.name()}">
+              <span th:case="'COMPLETED'" class="badge badge-success">Completed</span>
+              <span th:case="'RETURNED'" class="badge badge-danger">Returned</span>
+              <span th:case="*" class="badge badge-neutral" th:text="${s.status}"></span>
+            </span>
+          </td>
+          <td style="display:flex;gap:6px;">
+            <a th:href="@{/pos/invoice/{id}(id=${s.id})}" class="btn btn-outline btn-sm">View</a>
+            <form th:if="${s.status.name() == 'COMPLETED'}" th:action="@{/sales/return/{id}(id=${s.id})}" method="post" style="display:inline;">
+              <button class="btn btn-danger btn-sm" onclick="return confirm('Process return? Stock will be restored.')">Return</button>
+            </form>
+          </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(sales)}"><td colspan="8" class="empty-state">No sales found for the selected period.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div></div></body></html>

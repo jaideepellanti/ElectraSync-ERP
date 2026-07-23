@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Staff Logins — ElectraSync ERP</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{partials/sidebar :: sidebar}"></div>
+    <div class="main-content">
+
+        <div class="page-header">
+            <div>
+                <h1>🔐 Staff Logins</h1>
+                <div class="subtitle">System access accounts (username/password/role). Not the same as HR employee records.</div>
+            </div>
+            <a th:href="@{/owner/users/new}" class="btn btn-primary">+ Create Login</a>
+        </div>
+
+        <div th:replace="~{partials/flash-messages :: flashMessages}"></div>
+
+        <div class="card">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Full Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="u : ${users}">
+                        <td><strong th:text="${u.username}"></strong></td>
+                        <td th:text="${u.fullName}"></td>
+                        <td th:text="${u.email}"></td>
+                        <td>
+                            <span th:switch="${u.role.name()}">
+                                <span th:case="'OWNER'" class="badge badge-warning">Owner</span>
+                                <span th:case="'MANAGER'" class="badge badge-success">Manager</span>
+                                <span th:case="'CASHIER'" class="badge badge-neutral">Cashier</span>
+                            </span>
+                        </td>
+                        <td>
+                            <span th:class="${u.enabled} ? 'badge badge-success' : 'badge badge-danger'"
+                                  th:text="${u.enabled} ? 'Active' : 'Disabled'"></span>
+                        </td>
+                        <td>
+                            <div class="action-btns">
+                                <a th:href="@{/owner/users/edit/{id}(id=${u.id})}" class="btn btn-outline btn-sm">Edit</a>
+                                <form th:if="${u.enabled}" th:action="@{/owner/users/disable/{id}(id=${u.id})}" method="post" style="display:inline;">
+                                    <button type="submit" class="btn btn-danger btn-sm"
+                                            onclick="return confirm('Disable this login? The user will not be able to sign in.')">
+                                        Disable
+                                    </button>
+                                </form>
+                                <form th:unless="${u.enabled}" th:action="@{/owner/users/enable/{id}(id=${u.id})}" method="post" style="display:inline;">
+                                    <button type="submit" class="btn btn-outline btn-sm">Enable</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

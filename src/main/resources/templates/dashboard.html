@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard — ElectraSync ERP</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{partials/sidebar :: sidebar}"></div>
+
+    <div class="main-content">
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <div>
+                <h1>Welcome back, <span th:text="${username}">Owner</span> 👋</h1>
+                <div class="subtitle">Here's what's happening at your store today.</div>
+            </div>
+            <a th:href="@{/pos}" class="btn btn-accent">🛒 New Sale</a>
+        </div>
+
+        <!-- Flash Messages -->
+        <div th:replace="~{partials/flash-messages :: flashMessages}"></div>
+
+        <!-- KPI Cards -->
+        <div class="kpi-grid">
+
+            <div class="kpi-card success">
+                <div class="kpi-accent-bar"></div>
+                <div class="kpi-label">Today's Revenue</div>
+                <div class="kpi-value">
+                    ₹<span th:text="${#numbers.formatDecimal(data.todayRevenue, 0, 'COMMA', 2, 'POINT')}">0.00</span>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-accent-bar"></div>
+                <div class="kpi-label">Today's Sales</div>
+                <div class="kpi-value" th:text="${data.todaySalesCount}">0</div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-accent-bar"></div>
+                <div class="kpi-label">This Month Revenue</div>
+                <div class="kpi-value">
+                    ₹<span th:text="${#numbers.formatDecimal(data.monthRevenue, 0, 'COMMA', 2, 'POINT')}">0.00</span>
+                </div>
+            </div>
+
+            <div class="kpi-card success">
+                <div class="kpi-accent-bar"></div>
+                <div class="kpi-label">This Month Profit</div>
+                <div class="kpi-value">
+                    ₹<span th:text="${#numbers.formatDecimal(data.monthProfit, 0, 'COMMA', 2, 'POINT')}">0.00</span>
+                </div>
+            </div>
+
+            <div th:class="${data.lowStockCount > 0} ? 'kpi-card danger' : 'kpi-card'">
+                <div class="kpi-accent-bar"></div>
+                <div class="kpi-label">Low Stock Items</div>
+                <div class="kpi-value" th:text="${data.lowStockCount}">0</div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-accent-bar"></div>
+                <div class="kpi-label">Active Products</div>
+                <div class="kpi-value" th:text="${data.totalProducts}">0</div>
+            </div>
+
+            <div th:class="${data.pendingPOs > 0} ? 'kpi-card' : 'kpi-card'">
+                <div class="kpi-accent-bar"></div>
+                <div class="kpi-label">Pending Orders</div>
+                <div class="kpi-value" th:text="${data.pendingPOs}">0</div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-accent-bar"></div>
+                <div class="kpi-label">Total Customers</div>
+                <div class="kpi-value" th:text="${data.totalCustomers}">0</div>
+            </div>
+
+            <div class="kpi-card" sec:authorize="hasRole('OWNER')">
+                <div class="kpi-accent-bar"></div>
+                <div class="kpi-label">Active Employees</div>
+                <div class="kpi-value" th:text="${data.activeEmployees}">0</div>
+            </div>
+
+            <div class="kpi-card" sec:authorize="hasRole('OWNER')">
+                <div class="kpi-accent-bar"></div>
+                <div class="kpi-label">Salary Paid (This Month)</div>
+                <div class="kpi-value">
+                    ₹<span th:text="${#numbers.formatDecimal(data.monthSalaryPaid, 0, 'COMMA', 2, 'POINT')}">0.00</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Low Stock Warning -->
+        <div class="card" th:if="${data.lowStockCount > 0}">
+            <div class="card-header">
+                <h2 style="margin:0; font-size:16px; color:var(--color-danger);">
+                    ⚠️ Low Stock Alert — <span th:text="${data.lowStockCount}">0</span> item(s) need restocking
+                </h2>
+                <a th:href="@{/manager/products/low-stock}" class="btn btn-outline btn-sm">View All</a>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>SKU</th>
+                        <th>Product</th>
+                        <th>Current Stock</th>
+                        <th>Minimum</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="p, stat : ${data.lowStockProducts}" th:if="${stat.index < 5}">
+                        <td><code th:text="${p.sku}"></code></td>
+                        <td th:text="${p.name}"></td>
+                        <td><span class="badge badge-danger" th:text="${p.stockQuantity}"></span></td>
+                        <td th:text="${p.minimumStock}"></td>
+                        <td>
+                            <a th:href="@{/manager/purchase-orders/new}" class="btn btn-outline btn-sm">Order Stock</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="card">
+            <div class="card-header">
+                <h2 style="margin:0; font-size:16px;">🕒 Recent Sales</h2>
+                <a th:href="@{/sales}" class="btn btn-outline btn-sm">View All</a>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Invoice #</th>
+                        <th>Customer</th>
+                        <th>Amount</th>
+                        <th>Payment</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="sale : ${data.recentSales}">
+                        <td><code th:text="${sale.invoiceNumber}"></code></td>
+                        <td th:text="${sale.customer != null ? sale.customer.fullName : (sale.walkInCustomerName != null ? sale.walkInCustomerName : 'Walk-in')}"></td>
+                        <td>₹<span th:text="${#numbers.formatDecimal(sale.totalAmount, 0, 'COMMA', 2, 'POINT')}"></span></td>
+                        <td><span class="badge badge-neutral" th:text="${sale.paymentMethod}"></span></td>
+                        <td th:text="${#temporals.format(sale.saleDate, 'dd MMM, hh:mm a')}"></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(data.recentSales)}">
+                        <td colspan="5" class="empty-state">No sales recorded yet.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <h3 style="margin-top:0; font-size:15px;">Quick Actions</h3>
+            <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                <a th:href="@{/pos}" class="btn btn-accent">🛒 New Sale</a>
+                <a sec:authorize="hasAnyRole('OWNER','MANAGER')" th:href="@{/manager/purchase-orders/new}" class="btn btn-primary">📥 Purchase Order</a>
+                <a sec:authorize="hasAnyRole('OWNER','MANAGER')" th:href="@{/manager/products/new}" class="btn btn-outline">➕ Add Product</a>
+                <a sec:authorize="hasAnyRole('OWNER','MANAGER')" th:href="@{/manager/customers/new}" class="btn btn-outline">👤 Add Customer</a>
+                <a sec:authorize="hasRole('OWNER')" th:href="@{/owner/reports/profit-loss}" class="btn btn-outline">💰 P&amp;L Report</a>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>
